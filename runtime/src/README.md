@@ -3,8 +3,10 @@
 `runtime.js` stays intentionally tiny. It imports `bootRuntimeApp()` and bundles
 the extracted source lanes into one local `dist/runtime.js`.
 
-Start with [../../../docs/module-buckets.md](../../../docs/module-buckets.md).
-The local-only replacement edges are:
+Start with [../../docs/module-buckets.md](../../docs/module-buckets.md) to find
+the smallest owner for a change. Use
+[../../docs/runtime-call-order.md](../../docs/runtime-call-order.md) when you
+need the larger call graph. The local-only replacement edges are:
 
 - `bind-local-workspace/`
 - `call-valen-gateway/`

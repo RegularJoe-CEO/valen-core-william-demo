@@ -35,7 +35,9 @@ No hosted account, private token, or cloud access is required.
 
 Read [docs/public-boundary.md](docs/public-boundary.md), then use
 [docs/module-buckets.md](docs/module-buckets.md) to find the smallest useful
-owner for your change.
+owner for your change. Follow
+[docs/runtime-call-order.md](docs/runtime-call-order.md) when you need the
+larger runtime graph.
 
 The authorable `ValenGateway` hook and wrapper SDK is the next milestone. The
 current local bridge intentionally proves the extracted renderer loop first.
