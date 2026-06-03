@@ -15,4 +15,12 @@ echo " (Use localhost — not 0.0.0.0. You should see 'Starting Core…' immedia
 echo " Or click: Launch Live Agent Desk"
 echo " Audio ON recommended."
 echo "============================================================"
+PORT="${PORT:-9252}"
+if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+  OLD_PID="$(lsof -t -iTCP:"$PORT" -sTCP:LISTEN 2>/dev/null | head -1)"
+  echo ""
+  echo " Port $PORT in use (pid ${OLD_PID:-unknown}) — stopping previous Core server..."
+  kill "$OLD_PID" 2>/dev/null || true
+  sleep 0.5
+fi
 exec npm run serve
