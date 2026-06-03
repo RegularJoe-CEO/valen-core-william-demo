@@ -43,6 +43,16 @@ loading, bundler, contracts, fixtures, and browser smoke proof.
 
 No hosted account, private token, or cloud access is required.
 
+### Live Agent Desk (Milestone 2 preview)
+
+Agents can drive **foreground ↔ orbit** card choreography via local ValenGateway hooks — see [docs/live-agent-desk.md](docs/live-agent-desk.md).
+
+```bash
+npm run demo:gateway
+```
+
+Then open [http://localhost:9252/gateway-proof.html](http://localhost:9252/gateway-proof.html).
+
 ## Start Contributing
 
 Read [docs/public-boundary.md](docs/public-boundary.md), then use
