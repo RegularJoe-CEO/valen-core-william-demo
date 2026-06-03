@@ -1,6 +1,14 @@
 # ValenGateway proof — for William
 
-**William** (@willrob-valensdad) — one URL, one story. No Core boot noise.
+## The problem (Milestone 1)
+
+Public Core today: cinematic spatial UI + local work-object cards — but **only humans** click Keep / Dismiss / Approve. There is no standard **agent orchestration** layer in the public tree yet.
+
+## The improvement (Milestone 2 — this demo)
+
+**ValenGateway**: HTTP hooks so an **AI agent runtime** can move work objects **foreground ↔ orbit** without someone driving the UI. Same hook URL shape as production (`/api/hooks/execute/{spaceId}/{hook}`), running on localhost.
+
+**What William should recognize:** cards change on the right **with no clicks** — that is his spatial product model, now driven by hooks instead of manual play. Not a faster model; not hosted scale — **programmable spatial agent desk**.
 
 ## Run
 
@@ -8,17 +16,7 @@
 npm run demo:william
 ```
 
-Open: **http://localhost:9252/william-proof.html**
-
-## What you'll see (~8 seconds)
-
-**Left:** five plain-English steps (gateway → scan → run hooks → approve → done).
-
-**Right:** one big **foreground** card (the active decision) and small **orbit** chips (context pushed back).
-
-Real hooks still fire in the background (`start-live-agent-desk`, `tick-live-agent-desk`).
-
-Ends with: **call Eric** for the private tree.
+**http://localhost:9252/william-proof.html** — read the M1 vs M2 banner first, then watch the right panel during the ~8s run.
 
 ## Hooks implemented (public local harness)
 

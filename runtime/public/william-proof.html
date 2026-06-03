@@ -268,6 +268,67 @@
         color: var(--muted);
         border-color: var(--line);
       }
+      .story {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+        margin-bottom: 22px;
+      }
+      @media (max-width: 700px) {
+        .story {
+          grid-template-columns: 1fr;
+        }
+      }
+      .story-card {
+        padding: 16px 18px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .story-card.before {
+        border-color: rgba(255, 255, 255, 0.1);
+      }
+      .story-card.after {
+        border-color: var(--accent-dim);
+        background: rgba(94, 233, 199, 0.06);
+      }
+      .story-card h3 {
+        margin: 0 0 8px;
+        font-size: 0.68rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      .story-card.after h3 {
+        color: var(--accent);
+      }
+      .story-card p {
+        margin: 0;
+        font-size: 0.92rem;
+        line-height: 1.5;
+        color: var(--muted);
+      }
+      .story-card.after p {
+        color: var(--ink);
+      }
+      .recognize {
+        margin-bottom: 22px;
+        padding: 14px 18px;
+        border-radius: 12px;
+        border: 1px dashed var(--line);
+        font-size: 0.88rem;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .recognize strong {
+        color: var(--ink);
+      }
+      .step-improvement {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.8rem;
+        color: var(--accent);
+      }
     </style>
   </head>
   <body>
@@ -275,10 +336,39 @@
       <header>
         <div>
           <div class="brand">Valen Systems · Milestone 2 preview</div>
-          <h1>Live Agent Desk — gateway proof</h1>
+          <h1>Agents can drive the spatial workspace now</h1>
+          <p style="margin: 8px 0 0; color: var(--muted); font-size: 0.95rem; max-width: 52ch">
+            Milestone 2 preview — <strong style="color: var(--ink)">ValenGateway</strong> hooks move work
+            objects without a human clicking cards.
+          </p>
         </div>
-        <div class="live-pill" id="live-pill">LOCAL · LIVE</div>
+        <div class="live-pill" id="live-pill">M2 PREVIEW</div>
       </header>
+
+      <div class="story">
+        <div class="story-card before">
+          <h3>Milestone 1 (public Core today)</h3>
+          <p>
+            Beautiful spatial UI + local cards — but only <strong>you</strong> click Keep, Dismiss,
+            Approve. No standard way for an AI agent to orchestrate foreground vs orbit.
+          </p>
+        </div>
+        <div class="story-card after">
+          <h3>Milestone 2 (this demo)</h3>
+          <p>
+            An <strong>agent runtime</strong> calls gateway hooks (<code style="color: var(--accent)">start-live-agent-desk</code>,
+            <code style="color: var(--accent)">tick-live-agent-desk</code>) and the <strong>cards move themselves</strong>
+            — same idea as production URLs, running on localhost.
+          </p>
+        </div>
+      </div>
+
+      <p class="recognize">
+        <strong>How William recognizes the improvement:</strong> watch the right panel — nobody clicks.
+        The active decision stays in <strong>foreground</strong>; finished work slides to <strong>orbit</strong>.
+        That is Core’s product model, now driven by hooks instead of manual play. Bottom line: chat bots log text;
+        Valen moves <em>work objects in space</em>. This proves the orchestration layer for M2.
+      </p>
 
       <div class="grid">
         <section class="panel">
@@ -305,8 +395,8 @@
       </div>
 
       <div class="cta" id="cta">
-        <strong>William — this is M2 running on your public Core shape.</strong>
-        Eric built the hook loop locally. Call when you want it on the private tree.
+        <strong>Improvement in one line: AI agents can orchestrate Valen’s spatial cards via ValenGateway.</strong>
+        Eric shipped an M2 preview on public Core (hooks only, no proprietary IP). Call to put it on your private tree.
       </div>
 
       <div class="actions">
@@ -322,38 +412,43 @@
 
         const SCRIPT = [
           {
-            title: "Gateway online",
-            body: "ValenGateway hooks attached to Core on localhost — same URL pattern as production.",
+            title: "Agent attaches (not a human)",
+            body: "Gateway session starts via hook — no dashboard login, no manual Refresh.",
+            improvement: "M1: you open Core. M2: agent calls start-live-agent-desk.",
             hook: "start-live-agent-desk",
-            foreground: { title: "Agent desk online", sub: "Session scoped · hooks armed" },
+            foreground: { title: "Agent desk online", sub: "Hook armed · session scoped" },
             orbit: []
           },
           {
-            title: "Read the workspace",
-            body: "Agent inspects which work objects are in focus vs orbiting.",
+            title: "Agent reads spatial layout",
+            body: "Inspects which work objects are foreground (decision now) vs orbit (context).",
+            improvement: "Problem solved: agent sees the same buckets your UI uses.",
             hook: "tick-live-agent-desk",
-            foreground: { title: "Scanning workspace", sub: "Mapping card slots" },
+            foreground: { title: "Scanning workspace", sub: "foreground vs orbit" },
             orbit: ["Agent desk online"]
           },
           {
-            title: "Run manage_valen_hooks",
-            body: "Capability executes on the gateway — register tool, map body, poll card loop.",
+            title: "Agent runs a capability",
+            body: "manage_valen_hooks — register tools, map payloads, poll card loop (your M2 roadmap).",
+            improvement: "This is the programmable layer chat UIs do not have.",
             hook: "tick-live-agent-desk",
-            foreground: { title: "manage_valen_hooks", sub: "Streaming tool registration…" },
+            foreground: { title: "manage_valen_hooks", sub: "Executing on gateway…" },
             orbit: ["Agent desk online", "Scanning workspace"]
           },
           {
-            title: "Human approval",
-            body: "Decision stays on the card surface before anything publishes upstream.",
+            title: "Human approves on the card",
+            body: "Approval stays on the spatial surface — agent proposes, human confirms.",
+            improvement: "Core stays human-in-the-loop; agent does not bypass the card.",
             hook: "tick-live-agent-desk",
-            foreground: { title: "Approve gateway publish?", sub: "Eric · public Core only, no patent IP" },
+            foreground: { title: "Approve publish?", sub: "Decision on card, not in a log" },
             orbit: ["manage_valen_hooks"]
           },
           {
-            title: "Desk complete",
-            body: "Five steps, real hooks, spatial cards moved. Ready for private tree merge.",
+            title: "Run complete",
+            body: "Work objects moved across the run; hooks proved on localhost.",
+            improvement: "William: M2 orchestration works — ready to discuss private tree.",
             hook: "tick-live-agent-desk",
-            foreground: { title: "Desk run complete", sub: "Call Eric" },
+            foreground: { title: "Desk complete", sub: "Call Eric to merge upstream" },
             orbit: ["Approved", "manage_valen_hooks"]
           }
         ];
@@ -380,6 +475,9 @@
             s.title +
             '</div><div class="step-body">' +
             s.body +
+            (s.improvement
+              ? '<span class="step-improvement">↑ ' + s.improvement + "</span>"
+              : "") +
             "</div></div>";
           stepsEl.appendChild(li);
         });
