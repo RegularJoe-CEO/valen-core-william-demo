@@ -208,8 +208,8 @@ export function createLocalValenCardHarness(options = {}) {
         Object.assign(desk, advanceAgentDeskState(desk));
       }
       store.agentDesks[sessionId] = desk;
-      await persist();
       const cards = getCards(sessionId);
+      void persist();
       return response(200, {
         ok: true,
         success: true,

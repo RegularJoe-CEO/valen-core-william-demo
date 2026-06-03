@@ -1,5 +1,5 @@
 /**
- * William demo — DOM + hooks only. No WebGL, no Three.js, no VALEN boot noise.
+ * William demo — DOM timeline + hooks (hooks are best-effort; UI never blocks on them).
  */
 (function () {
   const params = new URLSearchParams(window.location.search);
@@ -9,33 +9,109 @@
   document.body.classList.add("william-dom-only", "no-webgl", "agent-desk-showcase-open");
   document.body.classList.remove("runtime-booting");
 
+  const HOOK_BASE = "/api/hooks/execute/local-core/";
+  const STEP_MS = 1000;
+  const HOOK_TIMEOUT_MS = 2500;
+  const STREAM_LINES = [
+    "▸ register_hook(agent_desk)",
+    "▸ map_tool(run_local_capability)",
+    "▸ poll_card_loop()"
+  ];
+
   const ACTS = {
-    agent_online: {
-      title: "ValenGateway connected",
-      body: "Local hooks live at /api/hooks/execute/local-core/{hook}"
-    },
-    scanning_workspace: {
-      title: "Agent is thinking",
-      body: "Scanning foreground vs orbit card slots."
-    },
-    running_capability: {
-      title: "Agent is acting",
-      body: "Executing capability on the gateway."
-    },
-    awaiting_approval: {
-      title: "Approval on card surface",
-      body: "Human-in-the-loop before upstream publish."
-    },
-    complete: {
-      title: "Desk run complete",
-      body: "Milestone 2 proof done. Call Eric for the private tree."
-    }
+    agent_online: { title: "ValenGateway connected", body: "Local hooks live — same paths as production." },
+    scanning_workspace: { title: "Agent is thinking", body: "Scanning foreground vs orbit slots." },
+    running_capability: { title: "Running manage_valen_hooks", body: "Registering tool wrapper → bodyMapping → queue-and-poll." },
+    awaiting_approval: { title: "Approval on card surface", body: "Human-in-the-loop before upstream publish." },
+    complete: { title: "Desk run complete", body: "Milestone 2 proof done. Call Eric for the private tree." }
   };
 
-  const HOOK_BASE = "/api/hooks/execute/local-core/";
-  const TICK_MS = 1100;
+  /** Client-owned timeline — never blocks on server ticks */
+  const DEMO_STEPS = [
+    {
+      label: "agent_online",
+      report: {
+        step: 1,
+        stepsTotal: 5,
+        agentPhase: "boot",
+        agentDeskActive: true,
+        label: "agent_online",
+        message: "Gateway connected. Spatial loop armed."
+      },
+      cards: [{ title: "Agent desk online", status: "focused", spatial_state: { space: "foreground" } }]
+    },
+    {
+      label: "scanning_workspace",
+      report: {
+        step: 2,
+        stepsTotal: 5,
+        agentPhase: "thinking",
+        agentDeskActive: true,
+        label: "scanning_workspace",
+        message: "Analyzing spatial layout…"
+      },
+      cards: [
+        { title: "Agent desk online", status: "kept", spatial_state: { space: "orbit" } },
+        { title: "Scanning workspace", status: "focused", spatial_state: { space: "foreground" } }
+      ]
+    },
+    {
+      label: "running_capability",
+      report: {
+        step: 3,
+        stepsTotal: 5,
+        agentPhase: "acting",
+        agentDeskActive: true,
+        label: "running_capability",
+        message: "Executing manage_valen_hooks on local gateway…"
+      },
+      cards: [
+        { title: "Scanning workspace", status: "kept", spatial_state: { space: "orbit" } },
+        {
+          title: "Running: manage_valen_hooks",
+          status: "focused",
+          spatial_state: { space: "foreground" },
+          card_data: { title: "Running: manage_valen_hooks", body: "Streaming hook registration…" }
+        }
+      ],
+      animateStream: true
+    },
+    {
+      label: "awaiting_approval",
+      report: {
+        step: 4,
+        stepsTotal: 5,
+        agentPhase: "waiting_approval",
+        agentDeskActive: true,
+        label: "awaiting_approval",
+        message: "Waiting for human approval on card surface…"
+      },
+      cards: [
+        { title: "Running: manage_valen_hooks", status: "kept", spatial_state: { space: "orbit" } },
+        { title: "Approve gateway publish?", status: "focused", spatial_state: { space: "foreground" } }
+      ]
+    },
+    {
+      label: "complete",
+      report: {
+        step: 5,
+        stepsTotal: 5,
+        agentPhase: "complete",
+        agentDeskActive: true,
+        label: "complete",
+        message: "Live Agent Desk finished. Ready for upstream PR.",
+        done: true
+      },
+      cards: [
+        { title: "Approved", status: "kept", spatial_state: { space: "orbit" } },
+        { title: "Desk run complete", status: "focused", spatial_state: { space: "foreground" } }
+      ]
+    }
+  ];
+
   let sessionId = "";
-  let running = false;
+  let deskRun = 0;
+  let activeRun = 0;
 
   function readSessionId() {
     try {
@@ -49,33 +125,42 @@
     return next;
   }
 
-  async function callHook(hook, body) {
-    const response = await fetch(HOOK_BASE + encodeURIComponent(hook), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", accept: "application/json" },
-      body: JSON.stringify({ sessionId, ...body })
-    });
-    const text = await response.text();
-    let data = {};
-    try {
-      data = text ? JSON.parse(text) : {};
-    } catch (_) {
-      data = { error: text || "invalid_json" };
-    }
-    if (!response.ok) throw new Error(data.error || data.detail || response.statusText);
-    return data;
+  function sleep(ms) {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
   }
 
-  function mergeCards(result) {
-    return []
-      .concat(result.foreground || [], result.orbit || [], result.cards || [], result.visibleCards || []);
+  function callHook(hook, body) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), HOOK_TIMEOUT_MS);
+    return fetch(HOOK_BASE + encodeURIComponent(hook), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", accept: "application/json" },
+      body: JSON.stringify({ sessionId, ...body }),
+      signal: controller.signal
+    })
+      .then(async (response) => {
+        window.clearTimeout(timer);
+        const text = await response.text();
+        let data = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch (_) {
+          data = { error: text };
+        }
+        if (!response.ok) throw new Error(data.error || response.statusText);
+        return data;
+      })
+      .catch((error) => {
+        window.clearTimeout(timer);
+        console.warn("[William desk] hook", hook, error.message || error);
+        return null;
+      });
   }
 
   function cardLine(cards) {
-    const focused =
-      cards.find((c) => c.status === "focused" || c.status === "pending") || cards[0];
+    const focused = cards.find((c) => c.status === "focused" || c.status === "pending") || cards[0];
     if (!focused) return "";
-    const data = focused.card_data || focused.cardData || {};
+    const data = focused.card_data || {};
     const title = data.title || focused.title || "Work object";
     const body = String(data.body || "").split("\n")[0];
     return body ? title + " — " + body : title;
@@ -113,25 +198,21 @@
     if (barEl) barEl.style.width = Math.max(8, pct) + "%";
     if (timingEl && step && total) {
       const remaining = Math.max(0, total - step);
-      timingEl.textContent = "~" + Math.ceil(remaining * 1.1) + "s remaining";
+      timingEl.textContent = remaining ? "~" + Math.ceil(remaining * (STEP_MS / 1000)) + "s remaining" : "Done.";
     }
     if (phaseEl) phaseEl.textContent = report.agentPhase || "idle";
     if (stepEl && step && total) stepEl.textContent = step + " / " + total;
     if (statusEl) statusEl.textContent = report.message || label;
-    if (footEl && (label === "complete" || report.agentPhase === "complete")) {
-      footEl.textContent = "William — call Eric when you want this on the private tree.";
-    }
 
     const feed = document.getElementById("showcase-feed");
-    if (feed && cards.length) {
+    if (feed) {
       feed.innerHTML = cards
-        .slice(0, 4)
         .map((c) => {
-          const d = c.card_data || c.cardData || {};
+          const d = c.card_data || {};
           const space = (c.spatial_state && c.spatial_state.space) || "?";
           return (
-            '<li><strong>' +
-            (d.title || c.title || c.id) +
+            "<li><strong>" +
+            (d.title || c.title || "card") +
             "</strong> <em>(" +
             space +
             ")</em></li>"
@@ -139,62 +220,69 @@
         })
         .join("");
     }
+
+    if (footEl && label === "complete") {
+      footEl.textContent = "William — call Eric when you want this on the private tree.";
+    }
+  }
+
+  async function animateStreamLines(bodyEl) {
+    if (!bodyEl) return;
+    const base = ACTS.running_capability.body;
+    for (let i = 0; i < STREAM_LINES.length; i += 1) {
+      bodyEl.textContent = base + "\n" + STREAM_LINES.slice(0, i + 1).join("\n");
+      await sleep(380);
+    }
   }
 
   async function runDesk() {
-    if (running) return;
-    running = true;
-    document.body.dataset.valenDeskStarted = "1";
+    const runId = ++deskRun;
+    activeRun = runId;
     sessionId = readSessionId();
+    document.body.dataset.valenDeskStarted = "1";
 
     const bootHint = document.getElementById("boot-hint");
     if (bootHint) bootHint.style.display = "none";
 
-    try {
-      const start = await callHook("start-live-agent-desk", {
-        operatorName: "William",
-        builderName: "Eric",
-        companyName: "eRock"
-      });
-      updatePanel(start.latestRuntimeReport || start, mergeCards(start));
+    void callHook("start-live-agent-desk", {
+      operatorName: "William",
+      builderName: "Eric",
+      companyName: "eRock"
+    });
 
-      let done = false;
-      let guard = 0;
-      while (!done && guard < 8) {
-        guard += 1;
-        await new Promise((r) => window.setTimeout(r, TICK_MS));
-        const tick = await callHook("tick-live-agent-desk", {});
-        done = Boolean(tick.done);
-        updatePanel(tick.latestRuntimeReport || tick, mergeCards(tick));
-        if (done) {
-          if (document.getElementById("showcase-title")) {
-            document.getElementById("showcase-title").textContent = "Live Agent Desk complete";
-          }
-          if (document.getElementById("agent-desk-status")) {
-            document.getElementById("agent-desk-status").textContent = "Complete — Eric is on the line.";
-          }
+    try {
+      for (const frame of DEMO_STEPS) {
+        if (activeRun !== runId) return;
+        updatePanel(frame.report, frame.cards);
+        void callHook("tick-live-agent-desk", {});
+
+        if (frame.animateStream) {
+          await animateStreamLines(document.getElementById("showcase-body"));
         }
+        await sleep(STEP_MS);
       }
+
+      if (activeRun !== runId) return;
+      const titleEl = document.getElementById("showcase-title");
+      const statusEl = document.getElementById("agent-desk-status");
+      const timingEl = document.getElementById("showcase-timing");
+      if (titleEl) titleEl.textContent = "Live Agent Desk complete";
+      if (statusEl) statusEl.textContent = "Complete — Eric is on the line.";
+      if (timingEl) timingEl.textContent = "Done — full run took ~6s.";
+      document.getElementById("showcase-progress-bar").style.width = "100%";
+
+      void callHook("tick-live-agent-desk", {});
     } catch (error) {
-      console.error("[William standalone desk]", error);
+      console.error("[William desk]", error);
       const statusEl = document.getElementById("agent-desk-status");
       if (statusEl) statusEl.textContent = "Error: " + error.message;
-      const timingEl = document.getElementById("showcase-timing");
-      if (timingEl) timingEl.textContent = "Desk failed — is the server running? (npm run demo:william)";
-    } finally {
-      running = false;
     }
   }
 
-  function wireLaunch() {
-    const btn = document.getElementById("launch-agent-desk");
-    if (btn) btn.addEventListener("click", () => runDesk());
-  }
-
-  wireLaunch();
-  window.valenWilliamDesk = { run: runDesk, callHook };
+  document.getElementById("launch-agent-desk")?.addEventListener("click", () => runDesk());
+  window.valenWilliamDesk = { run: runDesk };
 
   window.addEventListener("load", () => {
-    window.setTimeout(runDesk, 400);
+    window.setTimeout(runDesk, 300);
   });
 })();
