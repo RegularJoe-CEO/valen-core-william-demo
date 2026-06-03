@@ -24,4 +24,9 @@ if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   sleep 0.5
 fi
 export VALEN_WILLIAM_DEMO=1
-exec npm run serve
+DEMO_URL="http://localhost:${PORT}/?demo=william"
+if command -v open >/dev/null 2>&1; then
+  (sleep 1.2 && open "$DEMO_URL") &
+fi
+cd "$ROOT/runtime"
+exec env VALEN_WILLIAM_DEMO=1 node scripts/dev-server.mjs
