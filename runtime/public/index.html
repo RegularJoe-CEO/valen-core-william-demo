@@ -1,6 +1,14 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        if (params.get("demo") === "william" || params.get("agentDesk") === "1") {
+          document.documentElement.dataset.valenDemoWilliam = "1";
+        }
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Core by Valen Systems: Local Playground</title>
@@ -8,6 +16,11 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body class="runtime-booting">
+    <div id="boot-hint" class="boot-hint" role="status" aria-live="polite">
+      <p class="boot-hint-title">Starting Core…</p>
+      <p class="boot-hint-sub">Loading 3D assets and gateway hooks. First paint in a few seconds.</p>
+      <p class="boot-hint-sub boot-hint-slow">Still loading — check network (Three.js CDN) or try <code>?runtime=fallback</code></p>
+    </div>
     <canvas id="valen-pbr-stage" aria-hidden="true"></canvas>
     <canvas id="valen-stage" aria-hidden="true"></canvas>
 

@@ -11,9 +11,11 @@ npm run demo:william
 # or: bash scripts/william-demo.sh
 ```
 
-Open: **http://localhost:9252/?demo=william**
+Open: **http://localhost:9252/?demo=william** (use `localhost`, not `0.0.0.0`).
 
-Or click **Launch Live Agent Desk** in the top bar.
+You should see **“Starting Core…”** immediately, then the 3D desk within ~5–10s. If the screen stays empty for 12s+, try `?runtime=fallback&demo=william` or check the browser console for CDN/network errors.
+
+Or click **Launch Live Agent Desk** in the top bar after load.
 
 ## What you'll see
 

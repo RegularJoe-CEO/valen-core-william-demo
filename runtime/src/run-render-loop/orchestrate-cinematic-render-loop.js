@@ -58,10 +58,14 @@ export class CinematicRenderer {
     this.waveField = new RuntimeWaveField(this.gl, this.state, this.capabilities);
     this.sculptureLayer.start(this.gl, this.cameraRig, this.interaction, this.waveField);
     this.panelLayer.start(this.gl, this.cameraRig, this.interaction, this.waveField);
+    const fastBoot =
+      typeof window !== "undefined" &&
+      (new URLSearchParams(window.location.search).get("demo") === "william" ||
+        new URLSearchParams(window.location.search).get("fastBoot") === "1");
     this.firstSignalBoot = new RuntimeFirstSignalBootSequence(this.state, this.capabilities, {
-      minVisibleMs: this.capabilities.mobileOptimized ? 5400 : 6100,
-      settleMs: this.capabilities.mobileOptimized ? 900 : 1600,
-      settleFrames: this.capabilities.mobileOptimized ? 48 : 64,
+      minVisibleMs: fastBoot ? 700 : this.capabilities.mobileOptimized ? 5400 : 6100,
+      settleMs: fastBoot ? 450 : this.capabilities.mobileOptimized ? 900 : 1600,
+      settleFrames: fastBoot ? 10 : this.capabilities.mobileOptimized ? 48 : 64,
       layer: {
         assetRegistry: this.registry
       }

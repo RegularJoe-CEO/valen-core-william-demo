@@ -22,6 +22,14 @@ export function startRuntimeScrollSequencer({ state, controller, manifest }) {
   return sequencer;
 }
 
+export function revealRuntimeShell(state) {
+  if (typeof document === "undefined") return;
+  document.body.classList.add("3dRuntime");
+  document.body.classList.remove("runtime-booting");
+  setRuntimeDomOwnership(true);
+  state?.set("phase", "ready");
+}
+
 export function startRuntimeFallback({ state, controller, manifest, bodyClass = "no-webgl" }) {
   state.set("phase", "fallback");
   state.set("renderer", "fallback");
@@ -67,11 +75,20 @@ export function startRuntimeRenderer({
 export function finishRuntimeRendererBoot({ state, controller, manifest, capabilities, bootDone }) {
   state.set("phase", "sequencer");
   startRuntimeScrollSequencer({ state, controller, manifest });
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const williamDemo = params?.get("demo") === "william";
+  const bootRevealMs = williamDemo ? 9000 : 18000;
+  const revealWatchdog =
+    typeof window !== "undefined"
+      ? window.setTimeout(() => {
+          if (!document.body.classList.contains("runtime-booting")) return;
+          console.warn("[Valen runtime] Boot watchdog — revealing UI so the playground is not blank.");
+          revealRuntimeShell(state);
+        }, bootRevealMs)
+      : null;
   void Promise.resolve(bootDone).then(() => {
+    if (revealWatchdog) window.clearTimeout(revealWatchdog);
     if (state.get("phase") === "fallback") return;
-    document.body.classList.add("3dRuntime");
-    document.body.classList.remove("runtime-booting");
-    setRuntimeDomOwnership(true, capabilities);
-    state.set("phase", "ready");
+    revealRuntimeShell(state);
   });
 }

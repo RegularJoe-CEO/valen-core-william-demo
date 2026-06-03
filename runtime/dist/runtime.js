@@ -2620,8 +2620,16 @@ function bindUI(state, audio, stageDirector) {
   const params = new URLSearchParams(window.location.search);
   if (params.get("demo") === "william" || params.get("agentDesk") === "1") {
     window.setTimeout(() => {
-      liveAgentDesk.start().catch(() => {});
-    }, 1800);
+      liveAgentDesk.start().catch((error) => {
+        console.error("[Live Agent Desk] auto-start failed:", error);
+        state.set("runtimeLastAction", `agent-desk:auto-start-failed:${error.message}`);
+      });
+    }, 2800);
+    window.setTimeout(() => {
+      if (document.body.classList.contains("runtime-booting")) {
+        document.body.classList.add("boot-hint-slow");
+      }
+    }, 12000);
   }
 
   async function bootstrapLocalWorkspace() {
@@ -7895,10 +7903,14 @@ class CinematicRenderer {
     this.waveField = new RuntimeWaveField(this.gl, this.state, this.capabilities);
     this.sculptureLayer.start(this.gl, this.cameraRig, this.interaction, this.waveField);
     this.panelLayer.start(this.gl, this.cameraRig, this.interaction, this.waveField);
+    const fastBoot =
+      typeof window !== "undefined" &&
+      (new URLSearchParams(window.location.search).get("demo") === "william" ||
+        new URLSearchParams(window.location.search).get("fastBoot") === "1");
     this.firstSignalBoot = new RuntimeFirstSignalBootSequence(this.state, this.capabilities, {
-      minVisibleMs: this.capabilities.mobileOptimized ? 5400 : 6100,
-      settleMs: this.capabilities.mobileOptimized ? 900 : 1600,
-      settleFrames: this.capabilities.mobileOptimized ? 48 : 64,
+      minVisibleMs: fastBoot ? 700 : this.capabilities.mobileOptimized ? 5400 : 6100,
+      settleMs: fastBoot ? 450 : this.capabilities.mobileOptimized ? 900 : 1600,
+      settleFrames: fastBoot ? 10 : this.capabilities.mobileOptimized ? 48 : 64,
       layer: {
         assetRegistry: this.registry
       }
@@ -8095,6 +8107,14 @@ function startRuntimeScrollSequencer({ state, controller, manifest }) {
   return sequencer;
 }
 
+function revealRuntimeShell(state) {
+  if (typeof document === "undefined") return;
+  document.body.classList.add("3dRuntime");
+  document.body.classList.remove("runtime-booting");
+  setRuntimeDomOwnership(true);
+  state?.set("phase", "ready");
+}
+
 function startRuntimeFallback({ state, controller, manifest, bodyClass = "no-webgl" }) {
   state.set("phase", "fallback");
   state.set("renderer", "fallback");
@@ -8140,12 +8160,21 @@ function startRuntimeRenderer({
 function finishRuntimeRendererBoot({ state, controller, manifest, capabilities, bootDone }) {
   state.set("phase", "sequencer");
   startRuntimeScrollSequencer({ state, controller, manifest });
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const williamDemo = params?.get("demo") === "william";
+  const bootRevealMs = williamDemo ? 9000 : 18000;
+  const revealWatchdog =
+    typeof window !== "undefined"
+      ? window.setTimeout(() => {
+          if (!document.body.classList.contains("runtime-booting")) return;
+          console.warn("[Valen runtime] Boot watchdog — revealing UI so the playground is not blank.");
+          revealRuntimeShell(state);
+        }, bootRevealMs)
+      : null;
   void Promise.resolve(bootDone).then(() => {
+    if (revealWatchdog) window.clearTimeout(revealWatchdog);
     if (state.get("phase") === "fallback") return;
-    document.body.classList.add("3dRuntime");
-    document.body.classList.remove("runtime-booting");
-    setRuntimeDomOwnership(true, capabilities);
-    state.set("phase", "ready");
+    revealRuntimeShell(state);
   });
 }
 

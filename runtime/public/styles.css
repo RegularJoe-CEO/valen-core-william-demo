@@ -272,15 +272,76 @@ body.reading-mode #valen-stage {
   z-index: 5;
 }
 
+.boot-hint {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  text-align: center;
+  pointer-events: none;
+}
+
+.boot-hint-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.boot-hint-sub {
+  margin: 0;
+  max-width: 36rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.boot-hint-slow {
+  display: none;
+  color: var(--warm);
+}
+
+body.runtime-booting #boot-hint {
+  display: flex;
+}
+
+body.runtime-booting.boot-hint-slow #boot-hint .boot-hint-slow {
+  display: block;
+}
+
+html[data-valen-demo-william="1"] body.runtime-booting .topbar,
+html[data-valen-demo-william="1"] body.runtime-booting .diagnostics {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
 body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .experience,
 body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .scene-action-dock,
 body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .runtime-float,
-body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .topbar,
-body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .runtime-panel,
-body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .diagnostics {
+body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .runtime-panel {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
+}
+
+html:not([data-valen-demo-william="1"]) body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .topbar,
+html:not([data-valen-demo-william="1"]) body.runtime-booting:not([class~="3dRuntime"]):not(.no-webgl):not(.reading-mode) .diagnostics {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+body[class~="3dRuntime"] #boot-hint,
+body.no-webgl #boot-hint,
+body.reading-mode #boot-hint {
+  display: none;
 }
 
 body[class~="3dRuntime"] .experience {

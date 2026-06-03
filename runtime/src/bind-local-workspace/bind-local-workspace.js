@@ -56,8 +56,16 @@ export function bindUI(state, audio, stageDirector) {
   const params = new URLSearchParams(window.location.search);
   if (params.get("demo") === "william" || params.get("agentDesk") === "1") {
     window.setTimeout(() => {
-      liveAgentDesk.start().catch(() => {});
-    }, 1800);
+      liveAgentDesk.start().catch((error) => {
+        console.error("[Live Agent Desk] auto-start failed:", error);
+        state.set("runtimeLastAction", `agent-desk:auto-start-failed:${error.message}`);
+      });
+    }, 2800);
+    window.setTimeout(() => {
+      if (document.body.classList.contains("runtime-booting")) {
+        document.body.classList.add("boot-hint-slow");
+      }
+    }, 12000);
   }
 
   async function bootstrapLocalWorkspace() {
