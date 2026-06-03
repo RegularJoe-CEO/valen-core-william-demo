@@ -11,7 +11,7 @@ echo "============================================================"
 echo " LIVE AGENT DESK — ready for William"
 echo "============================================================"
 echo " Open: http://localhost:9252/?demo=william"
-echo " (Use localhost — not 0.0.0.0. You should see 'Starting Core…' immediately.)"
+echo " DOM-only demo (no 3D noise). Center panel steps 1→5 in ~6s."
 echo " Or click: Launch Live Agent Desk"
 echo " Audio ON recommended."
 echo "============================================================"
@@ -23,4 +23,5 @@ if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   kill "$OLD_PID" 2>/dev/null || true
   sleep 0.5
 fi
+export VALEN_WILLIAM_DEMO=1
 exec npm run serve

@@ -4,8 +4,11 @@
     <script>
       (function () {
         var params = new URLSearchParams(window.location.search);
-        if (params.get("demo") === "william" || params.get("agentDesk") === "1") {
+        var william = params.get("demo") === "william" || params.get("agentDesk") === "1";
+        window.VALEN_WILLIAM_DOM_DEMO = william;
+        if (william) {
           document.documentElement.dataset.valenDemoWilliam = "1";
+          document.documentElement.dataset.valenSkipRuntime = "1";
         }
       })();
     </script>
@@ -17,10 +20,22 @@
   </head>
   <body class="runtime-booting">
     <div id="boot-hint" class="boot-hint" role="status" aria-live="polite">
-      <p class="boot-hint-title">Starting Core…</p>
-      <p class="boot-hint-sub">Loading workspace — Live Agent Desk storyboard starts automatically on this URL.</p>
-      <p class="boot-hint-sub boot-hint-slow">Still loading — check network (Three.js CDN) or try <code>?runtime=fallback</code></p>
+      <p class="boot-hint-title">Starting Live Agent Desk…</p>
+      <p class="boot-hint-sub">DOM demo mode — no 3D boot noise.</p>
     </div>
+
+    <section id="agent-desk-showcase" class="agent-desk-showcase" aria-live="polite">
+      <p class="showcase-kicker">Live Agent Desk · ValenGateway M2 preview</p>
+      <h2 class="showcase-title" id="showcase-title">Loading hooks…</h2>
+      <p class="showcase-body" id="showcase-body">This panel is the demo. Steps advance every ~1 second.</p>
+      <p class="showcase-card" id="showcase-card" hidden></p>
+      <ul class="showcase-feed" id="showcase-feed"></ul>
+      <div class="showcase-progress" aria-hidden="true"><div class="showcase-progress-bar" id="showcase-progress-bar"></div></div>
+      <p class="showcase-meta" id="showcase-meta">Waiting for server…</p>
+      <p class="showcase-timing" id="showcase-timing">Full run ~6 seconds</p>
+      <p class="showcase-foot" id="showcase-foot">Built by Eric · eRock — for William @willrob-valensdad</p>
+    </section>
+
     <canvas id="valen-pbr-stage" aria-hidden="true"></canvas>
     <canvas id="valen-stage" aria-hidden="true"></canvas>
 
@@ -46,19 +61,19 @@
           <p class="kicker">LOCAL CORE PLAYGROUND</p>
           <h1>Work should orbit the decision.</h1>
           <p>
-            Improve the extracted cinematic runtime against local fixtures — or hit
-            <strong>Launch Live Agent Desk</strong> to watch ValenGateway-shaped hooks move real cards in 3D.
+            <strong>William demo URL</strong> runs hooks + this storyboard only (no WebGL).
+            Full cinematic runtime loads on the default playground URL.
           </p>
         </div>
       </section>
     </main>
 
     <aside class="diagnostics" aria-label="Local runtime status">
-      <div><span>Mode</span><strong>WorkspaceMode</strong></div>
+      <div><span>Mode</span><strong>William DOM demo</strong></div>
       <div><span>Gateway</span><strong>M2 preview</strong></div>
-      <div><span>Agent desk</span><strong id="agent-desk-phase">idle</strong></div>
+      <div><span>Agent desk</span><strong id="agent-desk-phase">starting</strong></div>
       <div><span>Step</span><strong id="agent-desk-step">—</strong></div>
-      <div class="agent-desk-line"><span>Status</span><strong id="agent-desk-status">Press Launch Live Agent Desk</strong></div>
+      <div class="agent-desk-line"><span>Status</span><strong id="agent-desk-status">Starting…</strong></div>
     </aside>
 
     <noscript><p class="noscript">Core needs JavaScript to run the cinematic runtime.</p></noscript>
@@ -70,6 +85,16 @@
         }
       }
     </script>
-    <script type="module" src="./dist/runtime.js"></script>
+    <script src="./scripts/william-standalone-desk.js" defer></script>
+    <script type="module">
+      if (document.documentElement.dataset.valenSkipRuntime !== "1") {
+        await import("./dist/runtime.js");
+      } else {
+        document.body.classList.add("william-dom-only", "no-webgl", "agent-desk-showcase-open");
+        document.body.classList.remove("runtime-booting");
+        const bootHint = document.getElementById("boot-hint");
+        if (bootHint) bootHint.style.display = "none";
+      }
+    </script>
   </body>
 </html>

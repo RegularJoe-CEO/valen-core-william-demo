@@ -10,6 +10,7 @@ const rootDir = path.resolve(__dirname, "..");
 const publicDir = path.resolve(rootDir, "public");
 const host = process.env.HOST || "0.0.0.0";
 const port = Number(process.env.PORT || "9252");
+const williamDemoMode = process.env.VALEN_WILLIAM_DEMO === "1";
 const localValenHarness = createLocalValenCardHarness();
 
 const MIME_TYPES = {
@@ -110,6 +111,16 @@ const server = http.createServer(async (req, res) => {
     sendJson(res, 400, { error: "missing_url" });
     return;
   }
+  const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+  if (
+    williamDemoMode &&
+    (url.pathname === "/" || url.pathname === "/index.html") &&
+    !url.searchParams.has("demo")
+  ) {
+    res.writeHead(302, { Location: "/?demo=william" });
+    res.end();
+    return;
+  }
   if (req.url.startsWith("/api/hooks/execute/")) {
     try {
       await handleLocalValenHook(req, res);
@@ -125,5 +136,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, host, () => {
   console.log(`Core public playground listening on http://${host}:${port}`);
+  if (williamDemoMode) {
+    console.log("William demo mode: open http://localhost:" + port + "/?demo=william (DOM only, no WebGL)");
+  }
   console.log(`Serving local Valen card hooks from ${localValenHarness.storePath}`);
 });

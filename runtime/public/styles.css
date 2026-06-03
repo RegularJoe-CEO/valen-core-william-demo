@@ -150,6 +150,51 @@ body.agent-desk-live .diagnostics strong#agent-desk-status {
   color: var(--warm);
 }
 
+.showcase-feed {
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+  max-height: 120px;
+  overflow: auto;
+}
+
+.showcase-feed li {
+  margin: 0 0 6px;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.showcase-feed em {
+  color: var(--soft);
+  font-style: normal;
+}
+
+html[data-valen-demo-william="1"] #valen-stage,
+html[data-valen-demo-william="1"] #valen-pbr-stage,
+body.william-dom-only #valen-stage,
+body.william-dom-only #valen-pbr-stage {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+body.william-dom-only.runtime-booting .experience,
+body.william-dom-only .experience,
+body.william-dom-only .topbar,
+body.william-dom-only .diagnostics {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
+body.william-dom-only .agent-desk-showcase {
+  display: block !important;
+}
+
+body.william-dom-only #boot-hint {
+  display: none !important;
+}
+
 body {
   min-height: 100%;
   margin: 0;
