@@ -133,10 +133,16 @@ body.agent-desk-live .diagnostics strong#agent-desk-status {
 }
 
 .showcase-meta,
+.showcase-timing,
 .showcase-foot {
   margin: 0;
   font-size: 0.82rem;
   color: var(--soft);
+}
+
+.showcase-timing {
+  margin-top: 6px;
+  color: var(--accent-dim);
 }
 
 .showcase-foot {

@@ -2512,6 +2512,7 @@ function ensureShowcase() {
     <p class="showcase-card" id="showcase-card"></p>
     <div class="showcase-progress" aria-hidden="true"><div class="showcase-progress-bar" id="showcase-progress-bar"></div></div>
     <p class="showcase-meta" id="showcase-meta">Step —</p>
+    <p class="showcase-timing" id="showcase-timing">Full run ~6 seconds · advances automatically</p>
     <p class="showcase-foot" id="showcase-foot">Built by Eric · eRock — for William @willrob-valensdad</p>
   `;
   document.body.appendChild(root);
@@ -2575,6 +2576,17 @@ function attachAgentDeskShowcase() {
     if (metaEl) {
       metaEl.textContent = step && total ? `Step ${step} / ${total} · ${label.replace(/_/g, " ")}` : report.message || "";
     }
+    const timingEl = document.getElementById("showcase-timing");
+    if (timingEl) {
+      if (report.agentPhase === "error") {
+        timingEl.textContent = "Desk stopped — check diagnostics or click Launch again.";
+      } else if (report.agentPhase === "complete" || report.done) {
+        timingEl.textContent = "Done.";
+      } else if (step && total) {
+        const remaining = Math.max(0, total - step);
+        timingEl.textContent = `~${Math.ceil(remaining * 1.1)}s remaining · do not wait more than 15s on one step`;
+      }
+    }
     if (barEl) {
       barEl.style.width = `${Math.max(8, pct)}%`;
     }
@@ -2602,13 +2614,33 @@ function attachAgentDeskShowcase() {
  * Drives spatial cards + sculpture pulse via local ValenGateway hooks.
  */
 
-const TICK_MS = 1400;
+const TICK_MS = 1100;
+const REFRESH_TIMEOUT_MS = 2500;
 const isWilliamDemo = () =>
   typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "william";
+
+function mergeHookCards(result = {}) {
+  return [
+    ...(Array.isArray(result.foreground) ? result.foreground : []),
+    ...(Array.isArray(result.orbit) ? result.orbit : []),
+    ...(Array.isArray(result.cards) ? result.cards : []),
+    ...(Array.isArray(result.visibleCards) ? result.visibleCards : [])
+  ];
+}
+
+async function refreshWithTimeout(refreshWorkspaceCards, reason) {
+  await Promise.race([
+    refreshWorkspaceCards(reason),
+    new Promise((_, reject) => {
+      window.setTimeout(() => reject(new Error("refresh timeout")), REFRESH_TIMEOUT_MS);
+    })
+  ]);
+}
 
 function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorkspaceCards }) {
   let timer = null;
   let running = false;
+  let ticking = false;
   const showcase = attachAgentDeskShowcase();
   let lastCards = [];
 
@@ -2639,39 +2671,63 @@ function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorkspaceCar
 
   const stop = () => {
     running = false;
-    if (timer) window.clearInterval(timer);
+    ticking = false;
+    if (timer) window.clearTimeout(timer);
     timer = null;
     document.body.classList.remove("agent-desk-live");
     document.body.dataset.valenAgentPhase = "idle";
     document.body.dataset.valenAgentPulse = "0";
   };
 
-  const tick = async () => {
+  const scheduleTick = () => {
     if (!running) return;
+    timer = window.setTimeout(() => {
+      void runTick();
+    }, TICK_MS);
+  };
+
+  const runTick = async () => {
+    if (!running || ticking) return;
+    ticking = true;
     try {
       const result = await valenWorkspace.callHook("tick-live-agent-desk", {
         method: "POST",
         body: { sessionId: valenWorkspace.getHookSessionId() }
       });
-      lastCards = [
-        ...(Array.isArray(result.foreground) ? result.foreground : []),
-        ...(Array.isArray(result.orbit) ? result.orbit : []),
-        ...(Array.isArray(result.cards) ? result.cards : [])
-      ];
-      if (!merged.length && Array.isArray(result.visibleCards)) lastCards = result.visibleCards;
-      else if (merged.length) lastCards = merged;
-      setAgentUi(result.latestRuntimeReport || result, lastCards);
-      await refreshWorkspaceCards(`agent-desk:${result.label || "tick"}`);
+      const merged = mergeHookCards(result);
+      if (merged.length) lastCards = merged;
+      const report = result.latestRuntimeReport || result;
+      setAgentUi(report, lastCards);
       if (result.done) {
         stop();
         const statusEl = document.getElementById("agent-desk-status");
         if (statusEl) statusEl.textContent = "Complete — Eric is on the line.";
+        if (isWilliamDemo()) {
+          try {
+            await refreshWithTimeout(refreshWorkspaceCards, "agent-desk:complete");
+          } catch {
+            /* UI storyboard already shown */
+          }
+        }
+        return;
       }
+      const refreshPromise = isWilliamDemo()
+        ? refreshWithTimeout(refreshWorkspaceCards, `agent-desk:${result.label || "tick"}`).catch((error) => {
+            console.warn("[Live Agent Desk] 3D refresh skipped:", error.message);
+          })
+        : refreshWorkspaceCards(`agent-desk:${result.label || "tick"}`);
+      await refreshPromise;
+      scheduleTick();
     } catch (error) {
       stop();
       state?.set("runtimeLastAction", `agent-desk:error:${error.message}`);
       const statusEl = document.getElementById("agent-desk-status");
       if (statusEl) statusEl.textContent = String(error.message || error);
+      if (isWilliamDemo()) {
+        showcase.update({ agentPhase: "error", message: error.message, label: "error" }, lastCards);
+      }
+    } finally {
+      ticking = false;
     }
   };
 
@@ -2689,24 +2745,22 @@ function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorkspaceCar
           companyName: "eRock"
         }
       });
-      lastCards = [
-        ...(Array.isArray(result.foreground) ? result.foreground : []),
-        ...(Array.isArray(result.visibleCards) ? result.visibleCards : [])
-      ];
+      lastCards = mergeHookCards(result);
       if (isWilliamDemo()) showcase.show();
       setAgentUi(result.latestRuntimeReport || result, lastCards);
-      await refreshWorkspaceCards("agent-desk-start");
-      timer = window.setInterval(() => {
-        tick();
-      }, TICK_MS);
-      await tick();
+      if (isWilliamDemo()) {
+        void refreshWorkspaceCards("agent-desk-start").catch(() => {});
+      } else {
+        await refreshWorkspaceCards("agent-desk-start");
+      }
+      await runTick();
     } catch (error) {
       stop();
       throw error;
     }
   };
 
-  return { start, stop, tick };
+  return { start, stop, tick: runTick };
 }
 
 // src/bind-local-workspace/bind-local-workspace.js

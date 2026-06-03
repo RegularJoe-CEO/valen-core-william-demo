@@ -41,6 +41,7 @@ function ensureShowcase() {
     <p class="showcase-card" id="showcase-card"></p>
     <div class="showcase-progress" aria-hidden="true"><div class="showcase-progress-bar" id="showcase-progress-bar"></div></div>
     <p class="showcase-meta" id="showcase-meta">Step —</p>
+    <p class="showcase-timing" id="showcase-timing">Full run ~6 seconds · advances automatically</p>
     <p class="showcase-foot" id="showcase-foot">Built by Eric · eRock — for William @willrob-valensdad</p>
   `;
   document.body.appendChild(root);
@@ -103,6 +104,17 @@ export function attachAgentDeskShowcase() {
     }
     if (metaEl) {
       metaEl.textContent = step && total ? `Step ${step} / ${total} · ${label.replace(/_/g, " ")}` : report.message || "";
+    }
+    const timingEl = document.getElementById("showcase-timing");
+    if (timingEl) {
+      if (report.agentPhase === "error") {
+        timingEl.textContent = "Desk stopped — check diagnostics or click Launch again.";
+      } else if (report.agentPhase === "complete" || report.done) {
+        timingEl.textContent = "Done.";
+      } else if (step && total) {
+        const remaining = Math.max(0, total - step);
+        timingEl.textContent = `~${Math.ceil(remaining * 1.1)}s remaining · do not wait more than 15s on one step`;
+      }
     }
     if (barEl) {
       barEl.style.width = `${Math.max(8, pct)}%`;
