@@ -55,12 +55,24 @@ export function bindUI(state, audio, stageDirector) {
 
   const params = new URLSearchParams(window.location.search);
   if (params.get("demo") === "william" || params.get("agentDesk") === "1") {
+    const autoStartDesk = async () => {
+      for (let attempt = 0; attempt < 48; attempt += 1) {
+        if (window.ValenWorkspace?.callHook) {
+          await liveAgentDesk.start();
+          return;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+      }
+      throw new Error("ValenWorkspace bridge not ready");
+    };
     window.setTimeout(() => {
-      liveAgentDesk.start().catch((error) => {
+      autoStartDesk().catch((error) => {
         console.error("[Live Agent Desk] auto-start failed:", error);
         state.set("runtimeLastAction", `agent-desk:auto-start-failed:${error.message}`);
+        const statusEl = document.getElementById("agent-desk-status");
+        if (statusEl) statusEl.textContent = `Auto-start failed: ${error.message}`;
       });
-    }, 2800);
+    }, 1200);
     window.setTimeout(() => {
       if (document.body.classList.contains("runtime-booting")) {
         document.body.classList.add("boot-hint-slow");
