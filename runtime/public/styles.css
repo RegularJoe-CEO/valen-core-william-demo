@@ -63,11 +63,238 @@ body.agent-desk-live .diagnostics strong#agent-desk-status {
   grid-column: 1 / -1;
 }
 
+.william-spatial-stage {
+  display: none;
+  position: fixed;
+  inset: 56px 0 auto 0;
+  height: min(58vh, 520px);
+  z-index: 12;
+  pointer-events: none;
+}
+
+body.william-dom-only .william-spatial-stage,
+html[data-valen-demo-william="1"] .william-spatial-stage {
+  display: block;
+}
+
+.spatial-scene {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.spatial-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(116, 244, 210, 0.12), transparent 42%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: auto, 72px 72px, 72px 72px;
+  animation: spatial-grid-drift 12s linear infinite;
+}
+
+@keyframes spatial-grid-drift {
+  0% {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  100% {
+    background-position: 0 0, 72px 72px, 72px 72px;
+  }
+}
+
+.spatial-orbit-ring {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: min(340px, 72vw);
+  height: min(340px, 72vw);
+  margin: calc(min(340px, 72vw) / -2) 0 0 calc(min(340px, 72vw) / -2);
+  border: 1px dashed rgba(116, 244, 210, 0.28);
+  border-radius: 50%;
+  animation: spatial-orbit-spin 24s linear infinite;
+}
+
+@keyframes spatial-orbit-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spatial-sculpture {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(116, 244, 210, 0.9), rgba(116, 244, 210, 0.15) 68%);
+  box-shadow: 0 0 60px rgba(116, 244, 210, 0.35);
+  animation: spatial-sculpture-breathe 2.4s ease-in-out infinite;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+.spatial-sculpture[data-phase="acting"] {
+  animation-duration: 0.9s;
+  box-shadow: 0 0 90px rgba(116, 244, 210, 0.55);
+}
+
+.spatial-sculpture[data-phase="complete"] {
+  background: radial-gradient(circle at 35% 30%, rgba(214, 178, 94, 0.95), rgba(116, 244, 210, 0.2) 70%);
+}
+
+@keyframes spatial-sculpture-breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+.spatial-cards {
+  position: absolute;
+  inset: 0;
+}
+
+.spatial-card {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  min-width: 148px;
+  max-width: 200px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent-dim);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-mid);
+  font-size: 0.82rem;
+  line-height: 1.25;
+  text-align: center;
+  transition:
+    left 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.75s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.4s ease,
+    box-shadow 0.4s ease;
+  transform: translate(-50%, -50%) scale(0.94);
+  opacity: 0;
+}
+
+.spatial-card.is-visible {
+  opacity: 1;
+}
+
+.spatial-card--foreground {
+  z-index: 4;
+  transform: translate(-50%, -50%) scale(1.05);
+  border-color: rgba(116, 244, 210, 0.65);
+  box-shadow: var(--shadow-near);
+}
+
+.spatial-card--orbit {
+  z-index: 3;
+  font-size: 0.76rem;
+  opacity: 0.88;
+  transform: translate(-50%, -50%) scale(0.88);
+}
+
+.spatial-card--focused {
+  animation: spatial-card-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes spatial-card-pulse {
+  0%,
+  100% {
+    box-shadow: var(--shadow-mid);
+  }
+  50% {
+    box-shadow: 0 0 36px rgba(116, 244, 210, 0.35), var(--shadow-mid);
+  }
+}
+
+.spatial-card--exit {
+  opacity: 0 !important;
+  transform: translate(-50%, -50%) scale(0.6) !important;
+}
+
+.spatial-hook-flash {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--warm-dim);
+  background: rgba(10, 12, 18, 0.92);
+  color: var(--warm);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  animation: hook-flash-in 0.35s ease;
+  z-index: 8;
+}
+
+@keyframes hook-flash-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.spatial-step-dots {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 6;
+}
+
+.spatial-step-dots span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.spatial-step-dots span.is-active {
+  background: var(--accent);
+  transform: scale(1.25);
+}
+
+.spatial-step-dots span.is-done {
+  background: var(--warm);
+}
+
+body.desk-run-complete .spatial-sculpture {
+  animation: spatial-complete-pop 0.8s ease;
+}
+
+@keyframes spatial-complete-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.35);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
 .agent-desk-showcase {
   display: none;
   position: fixed;
   left: 50%;
-  bottom: clamp(72px, 14vh, 120px);
+  bottom: clamp(16px, 4vh, 32px);
   transform: translateX(-50%);
   z-index: 25;
   width: min(640px, calc(100vw - 32px));
@@ -148,6 +375,17 @@ body.agent-desk-live .diagnostics strong#agent-desk-status {
 .showcase-foot {
   margin-top: 12px;
   color: var(--warm);
+}
+
+.showcase-replay {
+  margin-top: 14px;
+  pointer-events: auto;
+  width: 100%;
+}
+
+body.william-dom-only .experience {
+  opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 .showcase-feed {
