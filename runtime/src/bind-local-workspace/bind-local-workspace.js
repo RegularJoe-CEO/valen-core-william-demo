@@ -1,6 +1,7 @@
 import { createValenWorkspaceBridge } from "../call-valen-gateway/create-valen-workspace-bridge.js";
 import { ensureRuntimeStateMirror, updateRuntimeStateMirror } from "../own-runtime-state-and-dom/own-runtime-dom-and-state-mirror.js";
 import { bindWorkspaceModeCardActions } from "./bind-local-workspace-card-actions.js";
+import { attachLiveAgentDesk } from "./run-live-agent-desk.js";
 
 export function bindUI(state, audio, stageDirector) {
   const valenWorkspace = createValenWorkspaceBridge();
@@ -9,6 +10,12 @@ export function bindUI(state, audio, stageDirector) {
   ensureRuntimeStateMirror();
 
   const workspaceActions = bindWorkspaceModeCardActions({ state, stageDirector, valenWorkspace });
+  const liveAgentDesk = attachLiveAgentDesk({
+    state,
+    audio,
+    valenWorkspace,
+    refreshWorkspaceCards: workspaceActions.refreshWorkspaceCards
+  });
   window.valenRuntimeActions = {
     refreshWorkspaceCards: workspaceActions.refreshWorkspaceCards,
     handleWorkspaceCardAction: workspaceActions.handleWorkspaceCardAction,
@@ -26,10 +33,17 @@ export function bindUI(state, audio, stageDirector) {
       const result = await valenWorkspace.createBusinessStarterCards(payload);
       await workspaceActions.refreshWorkspaceCards("manual-starter");
       return result;
-    }
+    },
+    startLiveAgentDesk: () => liveAgentDesk.start(),
+    stopLiveAgentDesk: () => liveAgentDesk.stop()
   };
 
   document.getElementById("audio-toggle")?.addEventListener("click", () => audio.toggle());
+  document.getElementById("launch-agent-desk")?.addEventListener("click", () => {
+    liveAgentDesk.start().catch((error) => {
+      state.set("runtimeLastAction", `agent-desk:launch-failed:${error.message}`);
+    });
+  });
   document.getElementById("refresh-workspace")?.addEventListener("click", () => workspaceActions.refreshWorkspaceCards("button"));
   document.getElementById("reset-workspace")?.addEventListener("click", async () => {
     await valenWorkspace.callHook("reset-local-workspace", { method: "POST", body: { sessionId: valenWorkspace.getHookSessionId() } });
@@ -38,6 +52,13 @@ export function bindUI(state, audio, stageDirector) {
 
   updateRuntimeStateMirror({ phaseId: "WorkspaceMode", activeCard: "card10", activeObjectId: "card10", reason: "local-bind", cards: [] });
   window.setTimeout(bootstrapLocalWorkspace, 0);
+
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("demo") === "william" || params.get("agentDesk") === "1") {
+    window.setTimeout(() => {
+      liveAgentDesk.start().catch(() => {});
+    }, 1800);
+  }
 
   async function bootstrapLocalWorkspace() {
     const existing = await valenWorkspace.loadCards();

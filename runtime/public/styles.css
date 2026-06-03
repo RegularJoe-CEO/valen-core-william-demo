@@ -35,6 +35,34 @@ html {
   background: var(--stage);
 }
 
+body.agent-desk-live {
+  --accent: #8dffd9;
+  --accent-dim: rgba(141, 255, 217, 0.42);
+}
+
+body.agent-desk-live::before {
+  opacity: 0.85;
+  animation: agent-desk-grid-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes agent-desk-grid-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+body.agent-desk-live .diagnostics strong#agent-desk-status {
+  color: var(--accent);
+}
+
+.agent-desk-line {
+  grid-column: 1 / -1;
+}
+
 body {
   min-height: 100%;
   margin: 0;

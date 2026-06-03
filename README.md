@@ -36,6 +36,18 @@ npm run dev
 
 Open [http://localhost:9252](http://localhost:9252).
 
+### Live Agent Desk (Milestone 2 preview)
+
+This fork adds a **ValenGateway-shaped hook loop** that drives spatial cards in
+real time — no cloud, no token. One command:
+
+```bash
+bash scripts/william-demo.sh
+```
+
+Then open [http://localhost:9252/?demo=william](http://localhost:9252/?demo=william)
+or click **Launch Live Agent Desk**. Details: [DEMO_FOR_WILLIAM.md](DEMO_FOR_WILLIAM.md).
+
 The first public milestone is an extracted cinematic workspace renderer backed
 by a persistent local JSON card loop. It includes the authored card panels,
 center sculpture, Three.js layers, camera fit, motion, input handling, asset
