@@ -10,8 +10,8 @@ echo ""
 echo "============================================================"
 echo " LIVE AGENT DESK — ready for William"
 echo "============================================================"
-echo " Open: http://localhost:9252/?demo=william"
-echo " WATCH THE CENTER: cards move foreground → orbit. ~7s total."
+echo " Opens: http://localhost:9252/william-proof.html"
+echo " Split-screen proof console (~8s). Left = steps, right = foreground card."
 echo " Or click: Launch Live Agent Desk"
 echo " Audio ON recommended."
 echo "============================================================"
@@ -24,7 +24,7 @@ if lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
   sleep 0.5
 fi
 export VALEN_WILLIAM_DEMO=1
-DEMO_URL="http://localhost:${PORT}/?demo=william"
+DEMO_URL="http://localhost:${PORT}/william-proof.html"
 if command -v open >/dev/null 2>&1; then
   (sleep 1.2 && open "$DEMO_URL") &
 fi

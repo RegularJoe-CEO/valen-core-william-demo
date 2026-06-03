@@ -1,30 +1,24 @@
-# Live Agent Desk — for William
+# ValenGateway proof — for William
 
-**William** (@willrob-valensdad) — this fork ships **Milestone 2 early**: a real local **ValenGateway** hook loop that drives your spatial cards while Core runs.
+**William** (@willrob-valensdad) — one URL, one story. No Core boot noise.
 
-## 60-second demo
-
-From repo root:
+## Run
 
 ```bash
 npm run demo:william
-# or: bash scripts/william-demo.sh
 ```
 
-Open: **http://localhost:9252/?demo=william** (use `localhost`, not `0.0.0.0`).
+Open: **http://localhost:9252/william-proof.html**
 
-**DOM-only mode** — no WebGL, no VALEN noise. A large center panel steps through 1→5 in ~6 seconds. The full 3D runtime does **not** load on this URL.
+## What you'll see (~8 seconds)
 
-Or click **Launch Live Agent Desk** in the top bar after load.
+**Left:** five plain-English steps (gateway → scan → run hooks → approve → done).
 
-## What you'll see (30 seconds)
+**Right:** one big **foreground** card (the active decision) and small **orbit** chips (context pushed back).
 
-1. **Large center panel** — “Live Agent Desk” walks through 5 steps (gateway → think → act → approve → done).
-2. **Progress bar** and step counter (1/5 … 5/5) in plain English — not buried in 3D.
-3. Behind the panel, **spatial cards** move foreground ↔ orbit (optional 3D — you can ignore the noise).
-4. Final line: **call Eric** to put this on Valen’s private tree.
+Real hooks still fire in the background (`start-live-agent-desk`, `tick-live-agent-desk`).
 
-If you only see abstract 3D noise and no center panel, hard-refresh (`Cmd+Shift+R`) and confirm the URL has `?demo=william`.
+Ends with: **call Eric** for the private tree.
 
 ## Hooks implemented (public local harness)
 

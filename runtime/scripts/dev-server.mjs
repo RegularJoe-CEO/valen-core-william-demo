@@ -113,12 +113,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-  if (
-    williamDemoMode &&
-    (url.pathname === "/" || url.pathname === "/index.html") &&
-    !url.searchParams.has("demo")
-  ) {
-    res.writeHead(302, { Location: "/?demo=william" });
+  if (url.pathname === "/william-proof.html" || url.searchParams.get("demo") === "william") {
+    const proofPath = path.resolve(publicDir, "william-proof.html");
+    try {
+      await access(proofPath);
+      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" });
+      createReadStream(proofPath).pipe(res);
+      return;
+    } catch {
+      /* fall through */
+    }
+  }
+  if (williamDemoMode && (url.pathname === "/" || url.pathname === "/index.html")) {
+    res.writeHead(302, { Location: "/william-proof.html" });
     res.end();
     return;
   }
