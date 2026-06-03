@@ -3,13 +3,19 @@
  * Drives spatial cards + sculpture pulse via local ValenGateway hooks.
  */
 
-const TICK_MS = 2200;
+import { attachAgentDeskShowcase } from "./agent-desk-showcase.js";
+
+const TICK_MS = 1400;
+const isWilliamDemo = () =>
+  typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "william";
 
 export function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorkspaceCards }) {
   let timer = null;
   let running = false;
+  const showcase = attachAgentDeskShowcase();
+  let lastCards = [];
 
-  const setAgentUi = (report = {}) => {
+  const setAgentUi = (report = {}, cards = lastCards) => {
     const pulse = Number(report.sculpturePulse || 0);
     const phase = String(report.agentPhase || "idle");
     document.body.classList.toggle("agent-desk-live", Boolean(report.agentDeskActive));
@@ -29,6 +35,9 @@ export function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorks
       audio.energy = Math.max(audio.energy, pulse * 0.85);
     }
     state?.set("runtimeLastAction", `agent-desk:${phase}:${pulse.toFixed(2)}`);
+    if (isWilliamDemo()) {
+      showcase.update(report, cards);
+    }
   };
 
   const stop = () => {
@@ -47,7 +56,14 @@ export function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorks
         method: "POST",
         body: { sessionId: valenWorkspace.getHookSessionId() }
       });
-      setAgentUi(result.latestRuntimeReport || result);
+      lastCards = [
+        ...(Array.isArray(result.foreground) ? result.foreground : []),
+        ...(Array.isArray(result.orbit) ? result.orbit : []),
+        ...(Array.isArray(result.cards) ? result.cards : [])
+      ];
+      if (!merged.length && Array.isArray(result.visibleCards)) lastCards = result.visibleCards;
+      else if (merged.length) lastCards = merged;
+      setAgentUi(result.latestRuntimeReport || result, lastCards);
       await refreshWorkspaceCards(`agent-desk:${result.label || "tick"}`);
       if (result.done) {
         stop();
@@ -76,7 +92,12 @@ export function attachLiveAgentDesk({ state, audio, valenWorkspace, refreshWorks
           companyName: "eRock"
         }
       });
-      setAgentUi(result.latestRuntimeReport || result);
+      lastCards = [
+        ...(Array.isArray(result.foreground) ? result.foreground : []),
+        ...(Array.isArray(result.visibleCards) ? result.visibleCards : [])
+      ];
+      if (isWilliamDemo()) showcase.show();
+      setAgentUi(result.latestRuntimeReport || result, lastCards);
       await refreshWorkspaceCards("agent-desk-start");
       timer = window.setInterval(() => {
         tick();

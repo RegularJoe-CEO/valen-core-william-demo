@@ -62,6 +62,23 @@ export class CinematicRenderer {
       typeof window !== "undefined" &&
       (new URLSearchParams(window.location.search).get("demo") === "william" ||
         new URLSearchParams(window.location.search).get("fastBoot") === "1");
+    const williamDemo =
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("demo") === "william";
+
+    if (williamDemo) {
+      this.firstSignalBootDone = Promise.resolve(true);
+      this.threeAssetLayer.start().then((enabled) => {
+        this.panelLayer.usePbrAssetBodies = enabled;
+        if (enabled) this.panelLayer.setVisualPanelGeometries(this.threeAssetLayer.getCardVisualMetrics());
+        this.firstSignalPbrResolved = true;
+      });
+      this.resize();
+      this.bindEvents();
+      requestAnimationFrame((time) => this.render(time));
+      return this.firstSignalBootDone;
+    }
+
     this.firstSignalBoot = new RuntimeFirstSignalBootSequence(this.state, this.capabilities, {
       minVisibleMs: fastBoot ? 700 : this.capabilities.mobileOptimized ? 5400 : 6100,
       settleMs: fastBoot ? 450 : this.capabilities.mobileOptimized ? 900 : 1600,

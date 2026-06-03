@@ -17,12 +17,14 @@ You should see **“Starting Core…”** immediately, then the 3D desk within ~
 
 Or click **Launch Live Agent Desk** in the top bar after load.
 
-## What you'll see
+## What you'll see (30 seconds)
 
-1. Cards appear and **move foreground → orbit** as an agent script runs (no cloud, no token).
-2. Diagnostics show **agent phase** (boot → thinking → acting → approval → complete).
-3. **Audio** ramps with desk pulse (toggle speaker icon).
-4. Final card says: gateway verified, ready for private tree.
+1. **Large center panel** — “Live Agent Desk” walks through 5 steps (gateway → think → act → approve → done).
+2. **Progress bar** and step counter (1/5 … 5/5) in plain English — not buried in 3D.
+3. Behind the panel, **spatial cards** move foreground ↔ orbit (optional 3D — you can ignore the noise).
+4. Final line: **call Eric** to put this on Valen’s private tree.
+
+If you only see abstract 3D noise and no center panel, hard-refresh (`Cmd+Shift+R`) and confirm the URL has `?demo=william`.
 
 ## Hooks implemented (public local harness)
 
