@@ -1,6 +1,7 @@
 import { createReadStream } from "node:fs";
 import { access, stat } from "node:fs/promises";
 import http from "node:http";
+import { execSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createLocalValenCardHarness } from "./local-valen-card-harness.mjs";
@@ -134,10 +135,32 @@ const server = http.createServer(async (req, res) => {
   await serveStatic(req, res);
 });
 
+function freeListenPortIfBusy() {
+  try {
+    const pid = execSync(`lsof -t -iTCP:${port} -sTCP:LISTEN`, { encoding: "utf8" }).trim().split("\n")[0];
+    if (pid) {
+      console.warn(`Port ${port} was in use (pid ${pid}) — stopping previous server.`);
+      execSync(`kill ${pid}`);
+    }
+  } catch {
+    /* port free */
+  }
+}
+
+freeListenPortIfBusy();
+
+server.on("error", (error) => {
+  if (error && error.code === "EADDRINUSE") {
+    console.error(`\nPort ${port} is already in use. Stop it with:\n  kill $(lsof -t -iTCP:${port} -sTCP:LISTEN)\n`);
+    process.exit(1);
+  }
+  throw error;
+});
+
 server.listen(port, host, () => {
-  console.log(`Core public playground listening on http://${host}:${port}`);
+  console.log(`Core public playground listening on http://localhost:${port}`);
   if (williamDemoMode) {
-    console.log("William demo mode: open http://localhost:" + port + "/?demo=william (DOM only, no WebGL)");
+    console.log("William demo: http://localhost:" + port + "/?demo=william (DOM storyboard, no WebGL)");
   }
   console.log(`Serving local Valen card hooks from ${localValenHarness.storePath}`);
 });

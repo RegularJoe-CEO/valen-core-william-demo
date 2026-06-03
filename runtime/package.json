@@ -15,7 +15,7 @@
     "proof:card-loop": "node scripts/proof-card-loop.mjs",
     "proof:agent-desk": "node scripts/proof-agent-desk.mjs",
     "serve": "node scripts/dev-server.mjs",
-    "demo:william": "npm run build && npm run proof:agent-desk && node scripts/dev-server.mjs"
+    "demo:william": "npm run build && npm run proof:agent-desk && VALEN_WILLIAM_DEMO=1 node scripts/dev-server.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
